@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FITNANCE - Personal Finance Dashboard</title>
+  <meta name="description" content="Track income, expenses, savings, cards, and budget goals with FITNANCE Personal Finance Dashboard.">
+  
+  <!-- Inter Font from Google Fonts - brandGuidelines.md -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Chart.js CDN for responsive charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- APP HEADER -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand-logo">
+          <!-- Logo Icon -->
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="36" height="36" rx="10" fill="#2E3A8C"/>
+            <path d="M11 11H25V15H15V19H23V23H15V27H11V11Z" fill="white"/>
+          </svg>
+          <span>FITNANCE</span>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+          <button class="nav-tab active" data-tab="dashboard">Dashboard</button>
+          <button class="nav-tab" data-tab="transactions">Transactions</button>
+          <button class="nav-tab" data-tab="wallet">Wallet</button>
+          <button class="nav-tab" data-tab="goals">Goals</button>
+          <button class="nav-tab" data-tab="analytics">Analytics</button>
+          <button class="nav-tab" data-tab="reports">Reports</button>
+        </nav>
+      </div>
+
+      <div class="header-right">
+        <!-- Search Box -->
+        <div class="search-box">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input type="text" id="globalSearchInput" placeholder="Search transactions...">
+        </div>
+
+        <!-- Dark/Light Theme Toggle -->
+        <button class="header-icon-btn" id="btn-toggle-theme" title="Toggle Theme">
+          🌙
+        </button>
+
+        <!-- Notifications -->
+        <button class="header-icon-btn" title="Notifications">
+          🔔
+          <span class="notification-dot"></span>
+        </button>
+
+        <!-- User Profile -->
+        <div class="user-profile">
+          <div class="avatar">AM</div>
+          <span class="user-name">Alex Morgan</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT PAGES CONTAINER -->
+    <main class="main-content">
+
+      <!-- 1. DASHBOARD PAGE -->
+      <section id="page-dashboard" class="tab-page active">
+        <div class="dashboard-grid">
+          
+          <!-- Key Metrics Section (4 Cards) -->
+          <div class="metrics-row">
+            <!-- Card 1: Expense -->
+            <div class="card metric-card">
+              <div class="metric-header">
+                <span class="metric-title">Monthly Expenses</span>
+                <div class="metric-icon-box" style="color:var(--color-danger);">📉</div>
+              </div>
+              <div class="metric-value" id="metric-total-expense">$0.00</div>
+              <div id="metric-expense-change"></div>
+            </div>
+
+            <!-- Card 2: Income -->
+            <div class="card metric-card">
+              <div class="metric-header">
+                <span class="metric-title">Monthly Income</span>
+                <div class="metric-icon-box" style="color:var(--color-success);">📈</div>
+              </div>
+              <div class="metric-value" id="metric-total-income">$0.00</div>
+              <div id="metric-income-change"></div>
+            </div>
+
+            <!-- Card 3: Total Balance -->
+            <div class="card metric-card">
+              <div class="metric-header">
+                <span class="metric-title">Total Balance</span>
+                <div class="metric-icon-box">💰</div>
+              </div>
+              <div class="metric-value" id="metric-total-balance">$0.00</div>
+              <div id="metric-balance-change"></div>
+            </div>
+
+            <!-- Card 4: Savings -->
+            <div class="card metric-card">
+              <div class="metric-header">
+                <span class="metric-title">Total Savings</span>
+                <div class="metric-icon-box" style="color:#8B5CF6;">🏦</div>
+              </div>
+              <div class="metric-value" id="metric-total-savings">$0.00</div>
+              <div id="metric-savings-change"></div>
+            </div>
+          </div>
+
+          <!-- Total Income Bar Chart -->
+          <div class="card chart-card-large">
+            <div class="card-header">
+              <h2 class="card-title">Total Income Breakdown</h2>
+              <select id="incomeTimePeriodSelect" class="form-control" style="width: auto; padding: 0.35rem 0.75rem;">
+                <option value="thisMonth">This Month</option>
+                <option value="last3Months">Last 3 Months</option>
+                <option value="last6Months">Last 6 Months</option>
+                <option value="thisYear" selected>This Year</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="incomeChartCanvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Budget Donut Chart -->
+          <div class="card chart-card-small">
+            <div class="card-header">
+              <h2 class="card-title">Budget Allocation</h2>
+              <select id="budgetTimePeriodSelect" class="form-control" style="width: auto; padding: 0.35rem 0.75rem;">
+                <option value="thisMonth" selected>This Month</option>
+                <option value="lastMonth">Last Month</option>
+                <option value="thisYear">This Year</option>
+              </select>
+            </div>
+            <div class="chart-container" style="position:relative;">
+              <canvas id="budgetChartCanvas"></canvas>
+              <!-- Center Text inside Doughnut -->
+              <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none;">
+                <div id="budget-center-spent" style="font-weight: 800; font-size: 1.3rem; color: var(--color-text-dark);">$0</div>
+                <div id="budget-center-total" style="font-size: 0.75rem; color: var(--color-text-muted);">spent</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Transactions Table Card -->
+          <div class="card transactions-card">
+            <div class="card-header">
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <h2 class="card-title">Recent Transactions</h2>
+                <select id="recentTxnFilterSelect" class="form-control" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.85rem;">
+                  <option value="all" selected>All Recent</option>
+                  <option value="thisWeek">This Week</option>
+                  <option value="thisMonth">This Month</option>
+                </select>
+              </div>
+              <a href="#" id="link-see-all-transactions" style="font-weight: 600; font-size: 0.9rem;">See All →</a>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Name / Source</th>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-transactions-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Widgets Column (Spending Limits + My Cards) -->
+          <div class="widgets-col">
+            <!-- Spending Limits Widget -->
+            <div class="card">
+              <div class="card-header" style="margin-bottom:0.5rem;">
+                <h2 class="card-title">Monthly Spending Limit</h2>
+                <span class="badge badge-completed">Active</span>
+              </div>
+              <div class="spending-limit-info">
+                <span id="widget-spent-amount" style="font-size: 1.2rem; font-weight: 800; color: var(--color-text-dark);">$0.00</span>
+                <span style="color: var(--color-text-muted);">Limit: <strong id="widget-limit-amount">$4,500</strong></span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="widget-limit-progress" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <!-- My Cards Preview Widget -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">My Cards</h2>
+                <button class="btn btn-secondary" style="padding:0.35rem 0.75rem; font-size:0.85rem;" onclick="document.querySelector('.nav-tab[data-tab=wallet]').click()">+ Add Card</button>
+              </div>
+              <div class="payment-card-preview">
+                <div class="card-vendor-top">
+                  <span>FITNANCE PLATINUM</span>
+                  <span id="widget-card-type">VISA</span>
+                </div>
+                <div class="card-number-display" id="widget-card-number">•••• •••• •••• 4829</div>
+                <div class="card-footer-info">
+                  <div>
+                    <small style="opacity:0.8; font-size:0.65rem; display:block;">CARD HOLDER</small>
+                    <strong id="widget-card-holder">Alex Morgan</strong>
+                  </div>
+                  <div>
+                    <small style="opacity:0.8; font-size:0.65rem; display:block;">EXPIRES</small>
+                    <strong id="widget-card-expiry">08/28</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 2. TRANSACTIONS PAGE -->
+      <section id="page-transactions" class="tab-page">
+        <div class="filter-bar">
+          <div class="filter-group">
+            <div class="search-box">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input type="text" id="txnSearchInput" placeholder="Search by name, ID, notes...">
+            </div>
+
+            <select id="txnFilterType" class="form-control" style="width:auto;">
+              <option value="ALL">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+
+            <select id="txnFilterCategory" class="form-control" style="width:auto;">
+              <!-- Populated dynamically -->
+            </select>
+
+            <select id="txnFilterStatus" class="form-control" style="width:auto;">
+              <option value="ALL">All Statuses</option>
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending</option>
+              <option value="Failed">Failed</option>
+            </select>
+
+            <input type="date" id="txnFilterDateStart" class="form-control" style="width:auto;" title="Start Date">
+            <input type="date" id="txnFilterDateEnd" class="form-control" style="width:auto;" title="End Date">
+          </div>
+
+          <div class="filter-group">
+            <select id="txnSortSelect" class="form-control" style="width:auto;">
+              <option value="date-desc">Sort: Date (Newest)</option>
+              <option value="date-asc">Sort: Date (Oldest)</option>
+              <option value="amount-desc">Sort: Amount (High to Low)</option>
+              <option value="amount-asc">Sort: Amount (Low to High)</option>
+              <option value="recipientName-asc">Sort: Name (A-Z)</option>
+            </select>
+
+            <button class="btn btn-primary" id="btn-open-add-txn">+ Add Transaction</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Recipient / Source</th>
+                  <th>Transaction ID</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="full-transactions-tbody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Container -->
+          <div class="pagination-container">
+            <span id="txn-pagination-info" style="font-size:0.9rem; color:var(--color-text-muted);">Showing 0 of 0 transactions</span>
+            <div style="display:flex; gap:0.5rem;">
+              <button class="btn btn-secondary" id="btn-prev-page" style="padding:0.4rem 0.8rem;">Previous</button>
+              <button class="btn btn-secondary" id="btn-next-page" style="padding:0.4rem 0.8rem;">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. WALLET PAGE -->
+      <section id="page-wallet" class="tab-page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+          <div>
+            <h2>My Saved Cards</h2>
+            <p style="color:var(--color-text-muted);">Manage your payment cards and saved credit details.</p>
+          </div>
+          <button class="btn btn-primary" id="btn-open-add-card">+ Add New Card</button>
+        </div>
+
+        <div id="cards-grid-container" class="cards-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- 4. GOALS PAGE -->
+      <section id="page-goals" class="tab-page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+          <div>
+            <h2>Savings Goals Tracker</h2>
+            <p style="color:var(--color-text-muted);">Set target budgets and monitor progress toward your financial milestones.</p>
+          </div>
+          <button class="btn btn-primary" id="btn-open-add-goal">+ Create New Goal</button>
+        </div>
+
+        <div id="goals-grid-container" class="goals-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- 5. ANALYTICS & REPORTS PAGE -->
+      <section id="page-analytics" class="tab-page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+          <div>
+            <h2>Financial Analytics & Breakdown</h2>
+            <p style="color:var(--color-text-muted);">Visual insights into category distribution and long-term trend analysis.</p>
+          </div>
+          <div style="display:flex; gap:0.75rem;">
+            <button class="btn btn-secondary" id="btn-export-csv">📥 Export to CSV</button>
+            <button class="btn btn-primary" id="btn-export-pdf">🖨️ Export / Print PDF</button>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card chart-card-small">
+            <div class="card-header">
+              <h3 class="card-title">Expense Category Breakdown</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="analyticsCategoryChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card chart-card-large">
+            <div class="card-header">
+              <h3 class="card-title">Income vs Expense Trend</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="analyticsTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. REPORTS TAB (ALIAS) -->
+      <section id="page-reports" class="tab-page">
+        <div class="card" style="padding: 2.5rem; text-align: center;">
+          <h2>FITNANCE Summary Reports</h2>
+          <p style="color:var(--color-text-muted); margin: 1rem 0 2rem 0;">Generate structured CSV spreadsheet logs or printable PDF financial health audits.</p>
+          <div style="display:flex; justify-content:center; gap:1rem;">
+            <button class="btn btn-secondary" onclick="document.getElementById('btn-export-csv').click()">Export Full CSV Log</button>
+            <button class="btn btn-primary" onclick="window.print()">Print PDF Statement</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Add/Edit Transaction Modal -->
+  <div class="modal-overlay" id="txnModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="txnModalTitle">Add New Transaction</h3>
+        <button class="btn-icon-only btn-close-modal">✕</button>
+      </div>
+      <form id="transactionModalForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="txnFormType">Type</label>
+            <select id="txnFormType" class="form-control" required>
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="txnFormAmount">Amount ($)</label>
+            <input type="number" step="0.01" id="txnFormAmount" class="form-control" placeholder="0.00" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="txnFormCategory">Category</label>
+            <select id="txnFormCategory" class="form-control" required>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="txnFormRecipient">Recipient / Source Name</label>
+            <input type="text" id="txnFormRecipient" class="form-control" placeholder="e.g. Whole Foods" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="txnFormDate">Date</label>
+            <input type="date" id="txnFormDate" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="txnFormStatus">Status</label>
+            <select id="txnFormStatus" class="form-control" required>
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending</option>
+              <option value="Failed">Failed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="txnFormNotes">Notes (Optional)</label>
+          <input type="text" id="txnFormNotes" class="form-control" placeholder="Optional notes or tag">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Transaction Modal -->
+  <div class="modal-overlay" id="deleteTxnModalOverlay">
+    <div class="modal-card" style="max-width:400px;">
+      <div class="modal-header">
+        <h3>Confirm Delete</h3>
+        <button class="btn-icon-only btn-close-modal">✕</button>
+      </div>
+      <p style="color:var(--color-text-secondary); margin-bottom: 1.5rem;">Are you sure you want to permanently delete this transaction record?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary btn-close-modal">Cancel</button>
+        <button class="btn btn-danger" id="btn-confirm-delete-txn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Card Modal -->
+  <div class="modal-overlay" id="addCardModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add Saved Payment Card</h3>
+        <button class="btn-icon-only btn-close-modal">✕</button>
+      </div>
+      <form id="addCardModalForm">
+        <div class="form-group">
+          <label for="cardFormNumber">Card Number</label>
+          <input type="text" id="cardFormNumber" class="form-control" placeholder="1234 5678 9101 1121" required>
+        </div>
+        <div class="form-group">
+          <label for="cardFormName">Cardholder Name</label>
+          <input type="text" id="cardFormName" class="form-control" placeholder="Alex Morgan" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cardFormExpiry">Expiry Date (MM/YY)</label>
+            <input type="text" id="cardFormExpiry" class="form-control" placeholder="08/28" required>
+          </div>
+          <div class="form-group">
+            <label for="cardFormType">Card Network</label>
+            <select id="cardFormType" class="form-control" required>
+              <option value="visa">Visa</option>
+              <option value="mastercard">Mastercard</option>
+              <option value="amex">Amex</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cardFormNickname">Nickname (Optional)</label>
+          <input type="text" id="cardFormNickname" class="form-control" placeholder="e.g. Travel Rewards">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Card</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Card Modal -->
+  <div class="modal-overlay" id="deleteCardModalOverlay">
+    <div class="modal-card" style="max-width:400px;">
+      <div class="modal-header">
+        <h3>Delete Card</h3>
+        <button class="btn-icon-only btn-close-modal">✕</button>
+      </div>
+      <p style="color:var(--color-text-secondary); margin-bottom: 1.5rem;">Are you sure you want to remove this saved payment card?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary btn-close-modal">Cancel</button>
+        <button class="btn btn-danger" id="btn-confirm-delete-card">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Goal Modal -->
+  <div class="modal-overlay" id="addGoalModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create Savings Goal</h3>
+        <button class="btn-icon-only btn-close-modal">✕</button>
+      </div>
+      <form id="addGoalModalForm">
+        <div class="form-group">
+          <label for="goalFormName">Goal Name</label>
+          <input type="text" id="goalFormName" class="form-control" placeholder="e.g. House Down Payment" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="goalFormTarget">Target Amount ($)</label>
+            <input type="number" step="0.01" id="goalFormTarget" class="form-control" placeholder="10000" required>
+          </div>
+          <div class="form-group">
+            <label for="goalFormCurrent">Initial Saved ($)</label>
+            <input type="number" step="0.01" id="goalFormCurrent" class="form-control" placeholder="1000">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="goalFormDate">Target Date</label>
+          <input type="date" id="goalFormDate" class="form-control" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Deposit Goal Modal -->
+  <div class="modal-overlay" id="depositGoalModalOverlay">
+    <div class="modal-card" style="max-width:400px;">
+      <div class="modal-header">
+        <h3>Deposit Contribution</h3>
+        <button class="btn-icon-only btn-close-modal">✕</button>
+      </div>
+      <form id="depositGoalModalForm">
+        <div class="form-group">
+          <label for="depositFormAmount">Contribution Amount ($)</label>
+          <input type="number" step="0.01" id="depositFormAmount" class="form-control" placeholder="250.00" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Deposit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- App Main ES Module -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
